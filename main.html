@@ -13,7 +13,7 @@
             <div class="title">FROST</div>
         </div>
 
-        <div class="location">Rio de Janeiro - RJ</div>
+        <div id="localization" class="location">Rio de Janeiro - RJ</div>
 
         <div class="main-content">
             <!-- Painel de Temperatura -->
@@ -22,41 +22,41 @@
                 
                 <div class="metric-row">
                     <div class="metric-label">Temperatura atual:</div>
-                    <div class="metric-value">32° C</div>
+                    <div id="temp-atual" class="metric-value"></div>
                 </div>
 
                 <div class="metric-row">
                     <div class="metric-label">Temperatura externa:</div>
-                    <div class="metric-value">35° C</div>
+                    <div id="temp-externa" class="metric-value"></div>
                 </div>
 
                 <div class="metric-row">
                     <div class="metric-label">Sensação Térmica:</div>
-                    <div class="metric-value">35° C</div>
+                    <div id="sensacao-termica" class="metric-value"></div>
                 </div>
 
                 <div class="metric-row">
                     <div class="metric-label">Ponto de Orvalho:</div>
-                    <div class="metric-value">10° C</div>
+                    <div id="ponto-orvalho" class="metric-value"></div>
                 </div>
 
                 <div class="metric-row">
                     <div class="metric-label">Umidade Relativa:</div>
-                    <div class="metric-value">50 %</div>
+                    <div id="umidade-relativa" class="metric-value"></div>
                 </div>
 
                 <div class="stats-row">
                     <div class="stat-box">
                         <div class="stat-label">MAX</div>
-                        <div class="stat-value">35° C</div>
+                        <div id="max-temp" class="stat-value"></div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-label">MIN</div>
-                        <div class="stat-value">25° C</div>
+                        <div id="min-temp" class="stat-value"></div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-label">AVG</div>
-                        <div class="stat-value">30° C</div>
+                        <div id="avg-temp" class="stat-value"></div>
                     </div>
                 </div>
             </div>
@@ -72,7 +72,7 @@
                     </div>
                     <div class="control-label">
                         <span>Modo:</span>
-                        <select class="dropdown">
+                        <select id=mode-dropdown class="dropdown">
                             <option>Automático</option>
                             <option>Manual</option>
                         </select>
@@ -81,25 +81,29 @@
 
                 <div class="control-row">
                     <div class="control-label">Acionar sistema em:</div>
-                    <select class="dropdown">
-                        <option>35°C</option>
-                        <option>30°C</option>
-                        <option>25°C</option>
-                        <option>20°C</option>
+                    <select id="temp-dropdown" class="dropdown">
+                        <option value="40">40°C</option>
+                        <option value="35">35°C</option>
+                        <option value="30">30°C</option>
+                        <option value="25">25°C</option>
+                        <option value="20">20°C</option>
+                        <option value="15">15°C</option>
                     </select>
                 </div>
 
                 <div class="control-row">
                     <div class="control-label">Potência - RPM</div>
-                    <select class="dropdown">
+                    <select id=power-dropdown class="dropdown">
                         <option>Automático</option>
-                        <option>Manual</option>
+                        <option>Máximo</option>
+                        <option>Médio</option>
+                        <option>Mínimo</option>
                     </select>
                 </div>
 
                 <div class="control-row">
                     <div class="control-label">RPM Atual:</div>
-                    <div class="rpm-display">3.000 RPM</div>
+                    <div id="rpm" class="rpm-display"></div>
                 </div>
 
                 <button class="reset-button">Reiniciar padrão de fábrica</button>
@@ -108,7 +112,7 @@
             </div>
         </div>
 
-        <div class="timestamp">22/10/25 - 09:21</div>
+        <div class="timestamp"></div>
     </div>
 
     <script src="script.js"></script>
