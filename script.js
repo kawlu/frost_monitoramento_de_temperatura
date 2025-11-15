@@ -1,21 +1,6 @@
-//Espera o html carregar
-document.addEventListener('DOMContentLoaded', initApp);
-
-
-// Função principal
-function initApp() {
-
-
-const saveButton = document.querySelector('.save-button');
-const resetButton = document.querySelector('.reset-button');
-
-// Eventos
-saveButton.addEventListener('click', handleSave);
-resetButton.addEventListener('click', handleReset);
-
 // Simulação inicial 
 //TODO substituir por leitura do ESP32 futuramente)
-const dadosSimulados = {
+dados = {
     atual: 32,
     externa: 35,
     sensacao: 35,
@@ -24,11 +9,34 @@ const dadosSimulados = {
     max: 30,
     avg: 20,
     min: 10,
-    rpm: 3000
+    rpm_value: 3000,
+    modo:"Automático",     //mode_dropdown: "" Automático | Manual
+    temp_target:"35", //temp-dropdown 15, 20, 25 , 30, 35, 40
+    rpm_mode:"Médio", //rpm_power-dropdown Automático, Máximo, Médio, Mínimo
+
 };
 
-atualizarDados(dadosSimulados);
+//Espera o html carregar
+document.addEventListener('DOMContentLoaded', initApp);
+
+// Função principal
+function initApp() {
+
+const saveButton = document.querySelector('.save-button');
+const resetButton = document.querySelector('.reset-button');
+
+// Eventos
+saveButton.addEventListener('click', handleSave);
+resetButton.addEventListener('click', handleReset);
+
+//atualizarDados(dadosSimulados);
+atualizarDados()
 atualizarData();
+
+//Atualiza a cada 1 segundo
+setInterval(atualizarData, 1000);
+setInterval(atualizarDados, 1000)
+
 }
 
 
@@ -56,37 +64,45 @@ function handleGet() {
 
 
 // Atualização de UI
-function atualizarDados(dados) {
+function atualizarDados() {
     const metricas = {
-        "temp-atual": `${dados.atual}° C`,
-        "temp-externa": `${dados.externa}° C`,
-        "sensacao-termica": `${dados.sensacao}° C`,
-        "ponto-orvalho": `${dados.orvalho}° C`,
-        "umidade-relativa": `${dados.umidade} %`,
-        "max-temp": `${dados.max}° C`,
-        "avg-temp": `${dados.avg}° C`,
-        "min-temp": `${dados.min}° C`,
-        "rpm": `${dados.rpm} RPM`
+        "normal": {
+            "temp-atual": `${dados.atual}° C`,
+            "temp-externa": `${dados.externa}° C`,
+            "sensacao-termica": `${dados.sensacao}° C`,
+            "ponto-orvalho": `${dados.orvalho}° C`,
+            "umidade-relativa": `${dados.umidade} %`,
+            "max-temp": `${dados.max}° C`,
+            "avg-temp": `${dados.avg}° C`,
+            "min-temp": `${dados.min}° C`,
+            "rpm": `${dados.rpm_value} RPM`
+        },
+        "dropdown": {
+            "mode-dropdown":`${dados.modo}`,
+            "temp-dropdown":`${dados.temp_target}`,
+            "power-dropdown":`${dados.rpm_mode}`
+        },
+        
     };
 
-    for (const [id, valor] of Object.entries(metricas)) {
+    for (const [id, valor] of Object.entries(metricas['normal'])) {
         const elemento = document.getElementById(id);
         if (elemento) elemento.textContent = valor;
     }
+
+    for (const [id, valor] of Object.entries(metricas['dropdown'])) {
+        const elemento = document.getElementById(id);
+        if (elemento) elemento.value = valor;
+    }
+
 }
 
+//TODO ver loop
 function atualizarData() {
     const now = new Date()
 
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1; // jan = 0, logo +1
-    const day = now.getDate();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-
-    const frase = ` ${day}/${month}/${year} - ${hours}:${minutes}`;
+    const frase = now.toLocaleDateString() + ' - ' + now.toLocaleTimeString() ;
 
     const elemento = document.querySelector('.timestamp');
     if (elemento) elemento.textContent = frase;
-    
 }

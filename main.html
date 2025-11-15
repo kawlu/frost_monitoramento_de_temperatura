@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FROST - Sistema de Controle de Temperatura</title>
+    <title>FROST</title>
     <link rel="stylesheet" href="style.css">
 </head>
+<link rel="icon" type="image/png" href="assets/snow.png">
 <body>
     <div class="container">
         <div class="header">
@@ -66,17 +67,11 @@
                 <div class="panel-title">Sistema de Resfriamento</div>
                 
                 <div class="control-row">
-                    <div class="control-label">
-                        <span>Status:</span>
-                        <div class="status-indicator"></div>
-                    </div>
-                    <div class="control-label">
-                        <span>Modo:</span>
-                        <select id=mode-dropdown class="dropdown">
-                            <option>Automático</option>
-                            <option>Manual</option>
-                        </select>
-                    </div>
+                    <div class="control-label">Modo:</div>
+                    <select id=mode-dropdown class="dropdown">
+                        <option>Automático</option>
+                        <option>Manual</option>
+                    </select>
                 </div>
 
                 <div class="control-row">
@@ -93,7 +88,7 @@
 
                 <div class="control-row">
                     <div class="control-label">Potência - RPM</div>
-                    <select id=power-dropdown class="dropdown">
+                    <select id=rpm_power-dropdown class="dropdown">
                         <option>Automático</option>
                         <option>Máximo</option>
                         <option>Médio</option>
