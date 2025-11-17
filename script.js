@@ -10,9 +10,9 @@ dados = {
     avg: 20,
     min: 10,
     rpm_value: 3000,
-    modo:"Automático",     //mode_dropdown: "" Automático | Manual
-    temp_target:"35", //temp-dropdown 15, 20, 25 , 30, 35, 40
-    rpm_mode:"Médio", //rpm_power-dropdown Automático, Máximo, Médio, Mínimo
+    modo:"Manual",     //Automático | Manual
+    temp_target:"35", // 15, 20, 25 , 30, 35, 40
+    rpm_mode:"Médio", // Automático, Máximo, Médio, Mínimo
 
 };
 
@@ -29,8 +29,12 @@ const resetButton = document.querySelector('.reset-button');
 saveButton.addEventListener('click', handleSave);
 resetButton.addEventListener('click', handleReset);
 
-//atualizarDados(dadosSimulados);
-atualizarDados()
+// Listener
+document.getElementById("mode-dropdown")
+    .addEventListener("change", () => toggleDropdown());
+
+toggleDropdown();
+atualizarDados();
 atualizarData();
 
 //Atualiza a cada 1 segundo
@@ -56,12 +60,36 @@ function handleReset() {
 
 function handleGet() {
     // TODO: acessa e define os componentes com as escolhas já salvas
-
-    //mode-dropdown
-    //power-dropdown
-    //temp-dropdown
 }
 
+function toggleDropdown(){
+    let condition = Boolean(document.getElementById("mode-dropdown").value === "Automático")
+    let dropdowns = ["temp-dropdown", "rpm_power-dropdown"]
+
+    for (const id of dropdowns) {
+        document.getElementById(id).disabled = condition;
+    }
+
+    //TODO fazer ir pro default
+    
+}
+
+function atualizarConfiguracao(){
+    toggleDropdown()
+    //TODO rever essa prr
+    if (metricas['dropdown']['mode-dropdown'] == "Manual") {
+
+        for (const [id, valor] of Object.entries(metricas['dropdown'])) {
+            const elemento = document.getElementById(id);
+            if (elemento) elemento.value = valor;
+        }
+    }
+
+    else {
+        //coloca os valores default e impossibilita a edição dos dropdown
+    }
+
+}
 
 // Atualização de UI
 function atualizarDados() {
@@ -82,19 +110,13 @@ function atualizarDados() {
             "temp-dropdown":`${dados.temp_target}`,
             "power-dropdown":`${dados.rpm_mode}`
         },
-        
     };
 
+    //Carrega dados sobre temperatura e valor de rpm
     for (const [id, valor] of Object.entries(metricas['normal'])) {
-        const elemento = document.getElementById(id);
-        if (elemento) elemento.textContent = valor;
-    }
-
-    for (const [id, valor] of Object.entries(metricas['dropdown'])) {
-        const elemento = document.getElementById(id);
-        if (elemento) elemento.value = valor;
-    }
-
+            const elemento = document.getElementById(id);
+            if (elemento) elemento.textContent = valor;
+        }
 }
 
 //TODO ver loop

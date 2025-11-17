@@ -83,6 +83,10 @@ body {
     text-align: center;
 }
 
+select:disabled {
+    cursor: default;
+}
+
 .stats-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
