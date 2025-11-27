@@ -260,8 +260,9 @@ body {
 /* ---------- Mobile small ---------- */
 @media (max-width: 480px) {
     .stats-row {
-        grid-template-columns: 1fr; /* Stack total */
+        grid-template-columns: repeat(3, 1fr); /* mantém lado a lado */
     }
+
 
     .metric-row {
         flex-direction: column;
