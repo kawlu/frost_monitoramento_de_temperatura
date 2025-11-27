@@ -47,20 +47,26 @@ body {
     align-items: stretch;
 }
 
+/* ---------- Painéis ---------- */
+
 .panel {
     background: rgba(48, 56, 89, 0.6);
     border-radius: 20px;
     padding: 30px;
     backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Novo: uniformiza espaçamento vertical */
 }
 
 .panel-title {
     font-size: 28px;
     font-weight: 600;
-    margin-bottom: 25px;
     text-align: center;
+    margin-bottom: 10px;
 }
 
+/* Panel widths */
 .panel:first-child {
     flex: 1;
 }
@@ -68,37 +74,33 @@ body {
 .panel:last-child {
     flex: 1;
     min-height: 200px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
 }
 
-/* ----------- Ajuste da mensagem (EXPANSÃO VERTICAL) ----------- */
-.control-row#msg-row {
+/* ---------- Mensagem / painel direito ---------- */
+
+#msg-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
-    
-    /* Reforço do espaçamento vertical padrão */
-    margin-top: 20px;      /* distância para o título acima */
-    margin-bottom: 20px;   /* distância para o próximo bloco */
+    gap: 10px !important;
+    margin: 10px 0 10px 0 !important;
 }
 
 #status-msg {
     white-space: normal;
     word-break: break-word;
     width: 100%;
-    text-align: left;
-    padding: 12px 18px;
+    padding: 14px 20px;
+    border-radius: 12px;
+    background: #2d3561;
+    font-size: 18px;
 }
 
-/* -------------------------------------------------------------- */
+/* ---------- Métricas ---------- */
 
 .metric-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
 }
 
 .metric-label {
@@ -116,15 +118,13 @@ body {
     text-align: center;
 }
 
-select:disabled {
-    cursor: default;
-}
+/* ---------- Estatísticas ---------- */
 
 .stats-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 15px;
-    margin-top: 30px;
+    margin-top: 10px;
     padding-top: 20px;
     border-top: 2px solid rgba(255, 255, 255, 0.1);
 }
@@ -144,11 +144,12 @@ select:disabled {
     font-weight: bold;
 }
 
+/* ---------- Componentes gerais ---------- */
+
 .control-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
 }
 
 .control-label {
@@ -163,8 +164,6 @@ select:disabled {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #4ade80;
-    box-shadow: 0 0 10px #4ade80;
 }
 
 .status-indicator.ok {
@@ -203,44 +202,6 @@ select:disabled {
     text-align: center;
 }
 
-.reset-button {
-    background: transparent;
-    color: #ffffff;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    padding: 12px 25px;
-    border-radius: 8px;
-    font-size: 16px;
-    cursor: pointer;
-    width: 100%;
-    margin: 20px 0;
-    text-decoration: underline;
-    transition: all 0.3s;
-}
-
-.reset-button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.5);
-}
-
-.save-button {
-    background: #4ade80;
-    color: #1a1a2e;
-    border: none;
-    padding: 15px 40px;
-    border-radius: 12px;
-    font-size: 22px;
-    font-weight: bold;
-    cursor: pointer;
-    width: 100%;
-    transition: all 0.3s;
-}
-
-.save-button:hover {
-    background: #22c55e;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(74, 222, 128, 0.4);
-}
-
 .timestamp {
     text-align: right;
     margin-top: 20px;
@@ -248,21 +209,30 @@ select:disabled {
     font-weight: 600;
 }
 
-@media (max-width: 768px) {
+/* ---------- Responsividade real para celular ---------- */
+
+@media (max-width: 900px) {
+    body {
+        padding: 10px;
+    }
+
     .main-content {
-        grid-template-columns: 1fr;
+        flex-direction: column; /* Fix do layout */
+        gap: 20px;
+    }
+
+    .panel {
+        padding: 20px;
+        gap: 15px;
     }
 
     .title {
-        font-size: 32px;
+        font-size: 36px;
     }
 
     .location {
-        font-size: 24px;
-    }
-
-    .panel-title {
         font-size: 22px;
+        text-align: left;
     }
 
     .metric-label,
@@ -271,8 +241,45 @@ select:disabled {
     }
 
     .metric-value,
-    .dropdown,
     .rpm-display {
         font-size: 16px;
+        min-width: auto;
+    }
+
+    .stats-row {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+    }
+
+    #status-msg {
+        font-size: 16px;
+        padding: 12px 15px;
+    }
+}
+
+/* ---------- Mobile small ---------- */
+@media (max-width: 480px) {
+    .stats-row {
+        grid-template-columns: 1fr; /* Stack total */
+    }
+
+    .metric-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .metric-value {
+        width: 100%;
+    }
+
+    .control-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .panel-title {
+        font-size: 20px;
     }
 }
