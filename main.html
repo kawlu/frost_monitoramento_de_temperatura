@@ -64,46 +64,25 @@
 
             <!-- Painel de Sistema de Resfriamento -->
             <div class="panel">
-                <div class="panel-title">Sistema de Resfriamento</div>
-                
-                <div class="control-row">
-                    <div class="control-label">Modo:</div>
-                    <select id=mode-dropdown class="dropdown">
-                        <option>Automático</option>
-                        <option>Manual</option>
-                    </select>
-                </div>
-
-                <div class="control-row">
-                    <div class="control-label">Acionar sistema em:</div>
-                    <select id="temp-dropdown" class="dropdown">
-                        <option value="40">40°C</option>
-                        <option value="35">35°C</option>
-                        <option value="30">30°C</option>
-                        <option value="25">25°C</option>
-                        <option value="20">20°C</option>
-                        <option value="15">15°C</option>
-                    </select>
-                </div>
-
-                <div class="control-row">
-                    <div class="control-label">Potência - RPM</div>
-                    <select id=rpm_power-dropdown class="dropdown">
-                        <option>Automático</option>
-                        <option>Máximo</option>
-                        <option>Médio</option>
-                        <option>Mínimo</option>
-                    </select>
-                </div>
+                <div class="panel-title">Informações do Sistema</div>
 
                 <div class="control-row">
                     <div class="control-label">RPM Atual:</div>
                     <div id="rpm" class="rpm-display"></div>
                 </div>
 
-                <button class="reset-button">Reiniciar padrão de fábrica</button>
-
-                <button class="save-button">Salvar</button>
+                <div class="control-row" id="msg-row">
+                    <div class="control-label">Mensagem:</div>
+                    <div id="status-msg" class="metric-value"></div>
+                </div>
+                
+                <div class="control-row">
+                    <div class="control-label">
+                        Status do Sistema:
+                    </div>
+                    <div id="status-indicator" class="status-indicator"></div>
+                </div>
+                
             </div>
         </div>
 
