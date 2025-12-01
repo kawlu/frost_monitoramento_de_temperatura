@@ -1,78 +1,49 @@
-// Simulação inicial
-//TODO substituir por leitura do ESP32 futuramente)
-dados = {
-  atual: 0,
-  externa: 0,
-  sensacao: 0,
-  orvalho: 0,
-  umidade: 0,
-  max: 0,
-  avg: 0,
-  min: 0,
-  rpm_value: 3000,
-};
-
-// Espera o html carregar
+let dados = {};
 document.addEventListener("DOMContentLoaded", initApp);
-
-// Função principal
 function initApp() {
-  atualizarDados();
-  atualizarData();
-
-  // Atualiza a cada 1 segundo
-  setInterval(() => {
     atualizarDados();
-    atualizarStatus();
-    atualizarData();
-  }, 1000);
-
+    setInterval(() => { fetchData(); atualizarData(); }, 1000);
 }
-
-// Atualização de UI
+function fetchData() {
+    fetch("/status").then(r => r.json()).then(d => {
+        dados = d; atualizarDados(); atualizarStatus(); atualizarBotao();
+    }).catch(e => console.error(e));
+}
+function toggleCooler() { fetch("/toggle").then(() => fetchData()); }
+function atualizarBotao() {
+    const btn = document.getElementById("toggle-btn");
+    if (dados.masterSwitch) {
+        btn.textContent = "SISTEMA ATIVADO (AUTO)"; btn.className = "toggle-btn btn-on";
+    } else {
+        btn.textContent = "SISTEMA DESLIGADO"; btn.className = "toggle-btn btn-off";
+    }
+}
 function atualizarDados() {
-  const metricas = {
-    "temp-atual": `${dados.atual}° C`,
-    "temp-externa": `${dados.externa}° C`,
-    "sensacao-termica": `${dados.sensacao}° C`,
-    "ponto-orvalho": `${dados.orvalho}° C`,
-    "umidade-relativa": `${dados.umidade} %`,
-    "max-temp": `${dados.max}° C`,
-    "avg-temp": `${dados.avg}° C`,
-    "min-temp": `${dados.min}° C`,
-    rpm: `${dados.rpm_value} RPM`,
-  };
-  //Carrega dados sobre temperatura e valor de rpm
-  for (const [id, valor] of Object.entries(metricas)) {
-    const elemento = document.getElementById(id);
-    if (elemento) elemento.textContent = valor;
-  }
+    if (!dados.atual) return;
+    const metricas = {
+        "temp-atual": `${dados.atual.toFixed(1)}° C`, "temp-externa": `${dados.externa.toFixed(1)}° C`,
+        "sensacao-termica": `${dados.sensacao.toFixed(1)}° C`, "ponto-orvalho": `${dados.orvalho.toFixed(1)}° C`,
+        "umidade-relativa": `${dados.umidade.toFixed(1)} %`, "max-temp": `${dados.max.toFixed(1)}° C`,
+        "avg-temp": `${dados.avg.toFixed(1)}° C`, "min-temp": `${dados.min.toFixed(1)}° C`, "rpm": `${dados.rpm_value} RPM`,
+    };
+    for (const [id, valor] of Object.entries(metricas)) {
+        const el = document.getElementById(id); if (el) el.textContent = valor;
+    }
+    const upEl = document.getElementById("uptime-display");
+    if (upEl && dados.uptime) upEl.textContent = "Tempo Ativo: " + dados.uptime;
 }
-
-function atualizarData() {
-  const now = new Date();
-
-  const frase = now.toLocaleDateString() + " - " + now.toLocaleTimeString();
-
-  const elemento = document.querySelector(".timestamp");
-  if (elemento) elemento.textContent = frase;
-}
-
 function atualizarStatus() {
-  const indicator = document.getElementById("status-indicator");
-  const msg = document.getElementById("status-msg");
-
-  if (!indicator || !msg) return;
-
-  // TODO alterar regras corporativas de diagnóstico
-  if (dados.atual >= 35) {
-    indicator.className = "status-indicator error";
-    msg.textContent = "Sobrecarga térmica. Cooler ativado!";
-  } else if (dados.rpm_value < 500) {
-    indicator.className = "status-indicator warn";
-    msg.textContent = "RPM insuficiente. Eficiência degradada";
-  } else {
-    indicator.className = "status-indicator ok";
-    msg.textContent = "Sistemas em Funcionamento Normal!";
-  }
+    const ind = document.getElementById("status-indicator");
+    const msg = document.getElementById("status-msg");
+    if (!ind || !msg) return;
+    if (!dados.masterSwitch) {
+        ind.className = "status-indicator warn"; msg.textContent = "Sistema Desligado Manualmente.";
+    } else if (dados.atual >= 35) {
+        ind.className = "status-indicator error"; msg.textContent = "Temperatura Alta! Cooler Refrigerando.";
+    } else {
+        ind.className = "status-indicator ok"; msg.textContent = "Temperatura Estável. Cooler em desligando em 30cº.";
+    }
+}
+function atualizarData() {
+    const now = new Date(); document.querySelector(".timestamp").textContent = now.toLocaleDateString() + " - " + now.toLocaleTimeString();
 }

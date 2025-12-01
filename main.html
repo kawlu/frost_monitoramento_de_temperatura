@@ -6,89 +6,45 @@
     <title>FROST</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<link rel="icon" type="image/png" href="assets/snow.png">
 <body>
     <div class="container">
         <div class="header">
             <div class="logo">❄️</div>
             <div class="title">FROST</div>
         </div>
-
         <div id="localization" class="location">Rio de Janeiro - RJ</div>
-
+        
         <div class="main-content">
-            <!-- Painel de Temperatura -->
             <div class="panel">
                 <div class="panel-title">Temperatura</div>
-                
-                <div class="metric-row">
-                    <div class="metric-label">Temperatura atual:</div>
-                    <div id="temp-atual" class="metric-value"></div>
-                </div>
-
-                <div class="metric-row">
-                    <div class="metric-label">Temperatura externa:</div>
-                    <div id="temp-externa" class="metric-value"></div>
-                </div>
-
-                <div class="metric-row">
-                    <div class="metric-label">Sensação Térmica:</div>
-                    <div id="sensacao-termica" class="metric-value"></div>
-                </div>
-
-                <div class="metric-row">
-                    <div class="metric-label">Ponto de Orvalho:</div>
-                    <div id="ponto-orvalho" class="metric-value"></div>
-                </div>
-
-                <div class="metric-row">
-                    <div class="metric-label">Umidade Relativa:</div>
-                    <div id="umidade-relativa" class="metric-value"></div>
-                </div>
-
+                <div class="metric-row"><div class="metric-label">Temperatura atual:</div><div id="temp-atual" class="metric-value">--</div></div>
+                <div class="metric-row"><div class="metric-label">Temperatura externa:</div><div id="temp-externa" class="metric-value">--</div></div>
+                <div class="metric-row"><div class="metric-label">Sensação Térmica:</div><div id="sensacao-termica" class="metric-value">--</div></div>
+                <div class="metric-row"><div class="metric-label">Ponto de Orvalho:</div><div id="ponto-orvalho" class="metric-value">--</div></div>
+                <div class="metric-row"><div class="metric-label">Umidade Relativa:</div><div id="umidade-relativa" class="metric-value">--</div></div>
                 <div class="stats-row">
-                    <div class="stat-box">
-                        <div class="stat-label">MAX</div>
-                        <div id="max-temp" class="stat-value"></div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">MIN</div>
-                        <div id="min-temp" class="stat-value"></div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">AVG</div>
-                        <div id="avg-temp" class="stat-value"></div>
-                    </div>
+                    <div class="stat-box"><div class="stat-label">MAX</div><div id="max-temp" class="stat-value">--</div></div>
+                    <div class="stat-box"><div class="stat-label">MIN</div><div id="min-temp" class="stat-value">--</div></div>
+                    <div class="stat-box"><div class="stat-label">AVG</div><div id="avg-temp" class="stat-value">--</div></div>
                 </div>
             </div>
 
-            <!-- Painel de Sistema de Resfriamento -->
             <div class="panel">
                 <div class="panel-title">Informações do Sistema</div>
-
-                <div class="control-row">
-                    <div class="control-label">RPM Atual:</div>
-                    <div id="rpm" class="rpm-display"></div>
+                <div class="control-row" style="justify-content: center; margin-bottom: 20px;">
+                    <button id="toggle-btn" class="toggle-btn" onclick="toggleCooler()">LIGAR SISTEMA</button>
                 </div>
-
-                <div class="control-row" id="msg-row">
-                    <div class="control-label">Mensagem:</div>
-                    <div id="status-msg" class="metric-value"></div>
-                </div>
-                
-                <div class="control-row">
-                    <div class="control-label">
-                        Status do Sistema:
-                    </div>
-                    <div id="status-indicator" class="status-indicator"></div>
-                </div>
-                
+                <div class="control-row"><div class="control-label">RPM Atual:</div><div id="rpm" class="rpm-display">0 RPM</div></div>
+                <div class="control-row" id="msg-row"><div class="control-label">Mensagem:</div><div id="status-msg" class="metric-value">Aguardando...</div></div>
+                <div class="control-row"><div class="control-label">Status do Sistema:</div><div id="status-indicator" class="status-indicator"></div></div>
             </div>
         </div>
-
-        <div class="timestamp"></div>
+        
+        <div class="footer">
+            <div id="uptime-display" class="uptime">Tempo Ativo: Calculando...</div>
+            <div class="timestamp">--:--:--</div>
+        </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>

@@ -1,286 +1,34 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    color: #ffffff;
-    padding: 20px;
-    min-height: 100vh;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 30px;
-    gap: 15px;
-}
-
-.logo {
-    font-size: 48px;
-}
-
-.title {
-    font-size: 48px;
-    font-weight: bold;
-    letter-spacing: 2px;
-}
-
-.location {
-    text-align: right;
-    font-size: 32px;
-    font-weight: 600;
-    margin-bottom: 20px;
-}
-
-.main-content {
-    display: flex;
-    gap: 30px;
-    align-items: stretch;
-}
-
-/* ---------- Painéis ---------- */
-
-.panel {
-    background: rgba(48, 56, 89, 0.6);
-    border-radius: 20px;
-    padding: 30px;
-    backdrop-filter: blur(10px);
-    display: flex;
-    flex-direction: column;
-    gap: 20px; /* Novo: uniformiza espaçamento vertical */
-}
-
-.panel-title {
-    font-size: 28px;
-    font-weight: 600;
-    text-align: center;
-    margin-bottom: 10px;
-}
-
-/* Panel widths */
-.panel:first-child {
-    flex: 1;
-}
-
-.panel:last-child {
-    flex: 1;
-    min-height: 200px;
-}
-
-/* ---------- Mensagem / painel direito ---------- */
-
-#msg-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px !important;
-    margin: 10px 0 10px 0 !important;
-}
-
-#status-msg {
-    white-space: normal;
-    word-break: break-word;
-    width: 100%;
-    padding: 14px 20px;
-    border-radius: 12px;
-    background: #2d3561;
-    font-size: 18px;
-}
-
-/* ---------- Métricas ---------- */
-
-.metric-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.metric-label {
-    font-size: 20px;
-    font-weight: 500;
-}
-
-.metric-value {
-    background: #2d3561;
-    padding: 10px 25px;
-    border-radius: 25px;
-    font-size: 20px;
-    font-weight: 600;
-    min-width: 120px;
-    text-align: center;
-}
-
-/* ---------- Estatísticas ---------- */
-
-.stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    margin-top: 10px;
-    padding-top: 20px;
-    border-top: 2px solid rgba(255, 255, 255, 0.1);
-}
-
-.stat-box {
-    text-align: center;
-}
-
-.stat-label {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-
-.stat-value {
-    font-size: 22px;
-    font-weight: bold;
-}
-
-/* ---------- Componentes gerais ---------- */
-
-.control-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.control-label {
-    font-size: 20px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.status-indicator {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-}
-
-.status-indicator.ok {
-    background: #4ade80;
-    box-shadow: 0 0 10px #4ade80;
-}
-
-.status-indicator.warn {
-    background: #facc15;
-    box-shadow: 0 0 10px #facc15;
-}
-
-.status-indicator.error {
-    background: #ef4444;
-    box-shadow: 0 0 10px #ef4444;
-}
-
-.dropdown {
-    background: #ffffff;
-    color: #000000;
-    padding: 8px 15px;
-    border-radius: 8px;
-    border: none;
-    font-size: 18px;
-    font-weight: 600;
-    cursor: pointer;
-    min-width: 150px;
-}
-
-.rpm-display {
-    background: #2d3561;
-    padding: 10px 25px;
-    border-radius: 25px;
-    font-size: 20px;
-    font-weight: 700;
-    text-align: center;
-}
-
-.timestamp {
-    text-align: right;
-    margin-top: 20px;
-    font-size: 20px;
-    font-weight: 600;
-}
-
-/* ---------- Responsividade real para celular ---------- */
-
-@media (max-width: 900px) {
-    body {
-        padding: 10px;
-    }
-
-    .main-content {
-        flex-direction: column; /* Fix do layout */
-        gap: 20px;
-    }
-
-    .panel {
-        padding: 20px;
-        gap: 15px;
-    }
-
-    .title {
-        font-size: 36px;
-    }
-
-    .location {
-        font-size: 22px;
-        text-align: left;
-    }
-
-    .metric-label,
-    .control-label {
-        font-size: 16px;
-    }
-
-    .metric-value,
-    .rpm-display {
-        font-size: 16px;
-        min-width: auto;
-    }
-
-    .stats-row {
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 10px;
-    }
-
-    #status-msg {
-        font-size: 16px;
-        padding: 12px 15px;
-    }
-}
-
-/* ---------- Mobile small ---------- */
-@media (max-width: 480px) {
-    .stats-row {
-        grid-template-columns: repeat(3, 1fr); /* mantém lado a lado */
-    }
-
-
-    .metric-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-    }
-
-    .metric-value {
-        width: 100%;
-    }
-
-    .control-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-    }
-
-    .panel-title {
-        font-size: 20px;
-    }
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #ffffff; padding: 20px; min-height: 100vh; }
+.container { max-width: 1200px; margin: 0 auto; }
+.header { display: flex; align-items: center; margin-bottom: 30px; gap: 15px; }
+.logo { font-size: 48px; }
+.title { font-size: 48px; font-weight: bold; letter-spacing: 2px; }
+.location { text-align: right; font-size: 32px; font-weight: 600; margin-bottom: 20px; }
+.main-content { display: flex; gap: 30px; align-items: stretch; }
+.panel { background: rgba(48, 56, 89, 0.6); border-radius: 20px; padding: 30px; backdrop-filter: blur(10px); display: flex; flex-direction: column; gap: 20px; flex: 1; }
+.panel-title { font-size: 28px; font-weight: 600; text-align: center; margin-bottom: 10px; }
+.toggle-btn { width: 100%; padding: 15px; font-size: 18px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; transition: all .3s ease; text-transform: uppercase; }
+.btn-on { background-color: #ef4444; color: #fff; box-shadow: 0 0 15px rgba(239,68,68,.4); }
+.btn-off { background-color: #3b82f6; color: #fff; }
+.btn-on:hover { background-color: #dc2626; }
+.btn-off:hover { background-color: #2563eb; }
+#msg-row { flex-direction: column; align-items: flex-start; gap: 10px !important; margin: 10px 0 10px 0 !important; }
+#status-msg { white-space: normal; word-break: break-word; width: 100%; padding: 14px 20px; border-radius: 12px; background: #2d3561; font-size: 18px; }
+.status-indicator { width: 20px; height: 20px; border-radius: 50%; }
+.status-indicator.ok { background: #4ade80; box-shadow: 0 0 10px #4ade80; }
+.status-indicator.warn { background: #facc15; box-shadow: 0 0 10px #facc15; }
+.status-indicator.error { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+.metric-row, .control-row { display: flex; justify-content: space-between; align-items: center; }
+.metric-label, .control-label { font-size: 20px; font-weight: 500; }
+.metric-value { background: #2d3561; padding: 10px 25px; border-radius: 25px; font-size: 20px; font-weight: 600; min-width: 120px; text-align: center; }
+.rpm-display { background: #2d3561; padding: 10px 25px; border-radius: 25px; font-size: 20px; font-weight: 700; text-align: center; }
+.stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 15px; margin-top: 10px; padding-top: 20px; border-top: 2px solid rgba(255,255,255,.1); }
+.stat-box { text-align: center; }
+.stat-label { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.stat-value { font-size: 22px; font-weight: 700; }
+.footer { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,.1); }
+.uptime { font-size: 18px; color: #4ade80; font-weight: 600; }
+.timestamp { font-size: 18px; opacity: 0.8; font-weight: 600; }
+@media (max-width:900px){ body{padding:10px} .main-content{flex-direction:column;gap:20px} .panel{padding:20px;gap:15px} .title{font-size:36px} .location{font-size:22px;text-align:left} .metric-label,.control-label{font-size:16px} .metric-value,.rpm-display{font-size:16px;min-width:auto} .stats-row{grid-template-columns:1fr 1fr 1fr;gap:10px} }
+@media (max-width:480px){ .metric-row,.control-row{flex-direction:column;align-items:flex-start;gap:6px} .metric-value{width:100%} .footer{flex-direction:column;gap:10px;text-align:center} }

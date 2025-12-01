@@ -2,32 +2,28 @@
 #include <WebServer.h>
 #include <DHT.h>
 #include <DNSServer.h>
-#include <PubSubClient.h> // <--- NOVA BIBLIOTECA MQTT
+#include <PubSubClient.h> 
 
-// ================= CONFIGURAÇÕES DA REDE (DUPLA) =================
-// 1. Configuração do AP (A rede que o ESP cria)
+// ================= CONFIGURAÇÕES DA REDE =================
 const char* ap_ssid = "FROST_SYSTEM"; 
 const char* ap_password = "12345678"; 
 
-// 2. Configuração do Wi-Fi de Casa (Para o MQTT funcionar)
-const char* home_ssid = "Reis-TIM"; //nome do wi-fi que ele vai se conectar 
-const char* home_password = "santanareis"; // senha
+const char* home_ssid = "Alto_da_Boavista_5G"; 
+const char* home_password = "VicGiu01";
 
-// 3. Configurações MQTT
-const char* mqtt_server = "192.168.1.100"; // <--- IP DO SEU BROKER MQTT
+// ================= MQTT =================
+const char* mqtt_server = "broker.hivemq.com"; 
 const int mqtt_port = 1883;
-const char* mqtt_topic_status = "frost/status";
-const char* mqtt_topic_set = "frost/set"; // Para receber comandos via MQTT
+const char* mqtt_topic_status = "frost_system/status";
+const char* mqtt_topic_set = "frost_system/set"; 
 
-// Configurações do DNS (Portal Cativo)
 const byte DNS_PORT = 53;
 DNSServer dnsServer;
 
 // ================= HARDWARE =================
 #define DHTPIN 4
 #define DHTTYPE DHT22 
-#define PIN_TRANSISTOR 18  // Pino Base do Transistor
-#define CANAL_PWM 0       
+#define PIN_TRANSISTOR 26  
 
 DHT dht(DHTPIN, DHTTYPE);
 WebServer server(80);
@@ -38,33 +34,176 @@ PubSubClient client(espClient);
 float tempAtual = 0, humAtual = 0;
 float tempMax = -100, tempMin = 100, tempSoma = 0;
 long leiturasCount = 0;
+bool masterSwitch = false; 
+int rpmDisplay = 0; 
 
-String modoOperacao = "Manual";
-String targetTemp = "25";
-String rpmMode = "Médio";
-int rpmValue = 0;
+// ================= SITE =================
+const char index_html[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FROST</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">❄️</div>
+            <div class="title">FROST</div>
+        </div>
+        <div id="localization" class="location">Rio de Janeiro - RJ</div>
+        
+        <div class="main-content">
+            <div class="panel">
+                <div class="panel-title">Temperatura</div>
+                <div class="metric-row"><div class="metric-label">Temperatura atual:</div><div id="temp-atual" class="metric-value">--</div></div>
+                <div class="metric-row"><div class="metric-label">Temperatura externa:</div><div id="temp-externa" class="metric-value">--</div></div>
+                <div class="metric-row"><div class="metric-label">Sensação Térmica:</div><div id="sensacao-termica" class="metric-value">--</div></div>
+                <div class="metric-row"><div class="metric-label">Ponto de Orvalho:</div><div id="ponto-orvalho" class="metric-value">--</div></div>
+                <div class="metric-row"><div class="metric-label">Umidade Relativa:</div><div id="umidade-relativa" class="metric-value">--</div></div>
+                <div class="stats-row">
+                    <div class="stat-box"><div class="stat-label">MAX</div><div id="max-temp" class="stat-value">--</div></div>
+                    <div class="stat-box"><div class="stat-label">MIN</div><div id="min-temp" class="stat-value">--</div></div>
+                    <div class="stat-box"><div class="stat-label">AVG</div><div id="avg-temp" class="stat-value">--</div></div>
+                </div>
+            </div>
 
-// ================= HTML / CSS / JS (MINIFICADO PARA ECONOMIZAR ESPAÇO) =================
-// Mantive o mesmo HTML do seu código anterior, apenas referenciando as variáveis PROGMEM
-// (Assumindo que você já tem o conteúdo index_html, style_css e script_js do passo anterior)
-// Vou omitir aqui para focar na lógica C++, mas imagine que estão aqui.
-const char index_html[] PROGMEM = R"rawliteral(<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>FROST</title><link rel="stylesheet" href="style.css"></head><body><div class="container"><div class="header"><div class="logo">❄️</div><div class="title">FROST</div></div><div id="localization" class="location">Modo Híbrido (AP + MQTT)</div><div class="main-content"><div class="panel"><div class="panel-title">Temperatura</div><div class="metric-row"><div class="metric-label">Temp. Atual:</div><div id="temp-atual" class="metric-value">--</div></div><div class="metric-row"><div class="metric-label">Umidade:</div><div id="umidade-relativa" class="metric-value">--</div></div><div class="metric-row"><div class="metric-label">Sensação:</div><div id="sensacao-termica" class="metric-value">--</div></div><div class="metric-row"><div class="metric-label">Orvalho:</div><div id="ponto-orvalho" class="metric-value">--</div></div><div class="stats-row"><div class="stat-box"><div class="stat-label">MAX</div><div id="max-temp" class="stat-value">--</div></div><div class="stat-box"><div class="stat-label">MIN</div><div id="min-temp" class="stat-value">--</div></div><div class="stat-box"><div class="stat-label">AVG</div><div id="avg-temp" class="stat-value">--</div></div></div></div><div class="panel"><div class="panel-title">Resfriamento</div><div class="control-row"><div class="control-label">Modo:</div><select id="mode-dropdown" class="dropdown"><option>Automático</option><option>Manual</option></select></div><div class="control-row"><div class="control-label">Acionar em:</div><select id="temp-dropdown" class="dropdown"><option value="40">40°C</option><option value="35">35°C</option><option value="30">30°C</option><option value="25">25°C</option></select></div><div class="control-row"><div class="control-label">Potência:</div><select id="rpm_power-dropdown" class="dropdown"><option>Automático</option><option>Máximo</option><option>Médio</option><option>Mínimo</option></select></div><div class="control-row"><div class="control-label">RPM (Virtual):</div><div id="rpm" class="rpm-display">0 RPM</div></div><button class="reset-button" onclick="handleReset()">Resetar Stats</button><button class="save-button" onclick="handleSave()">Salvar</button></div></div><div class="timestamp"></div></div><script src="script.js"></script></body></html>)rawliteral";
-const char style_css[] PROGMEM = R"rawliteral(*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#fff;padding:10px;min-height:100vh}.container{max-width:1200px;margin:0 auto}.header{display:flex;align-items:center;margin-bottom:20px;gap:10px;justify-content:center}.logo,.title{font-size:32px;font-weight:bold}.location{text-align:center;font-size:18px;margin-bottom:15px;opacity:.8}.main-content{display:grid;grid-template-columns:1fr;gap:20px}@media (min-width:768px){.main-content{grid-template-columns:1fr 1fr}}.panel{background:rgba(48,56,89,.6);border-radius:15px;padding:15px;backdrop-filter:blur(10px)}.panel-title{font-size:20px;font-weight:600;margin-bottom:15px;text-align:center;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:10px}.metric-row,.control-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.metric-value{background:#2d3561;padding:5px 10px;border-radius:15px;min-width:80px;text-align:center;font-weight:bold;font-size:14px}.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:15px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px}.stat-box{text-align:center}.stat-label{font-size:10px;opacity:.7}.dropdown{padding:5px;border-radius:5px;min-width:100px;font-size:14px}.save-button{background:#4ade80;color:#1a1a2e;border:none;padding:12px;width:100%;border-radius:10px;font-weight:bold;cursor:pointer;margin-top:10px;font-size:16px}.reset-button{background:transparent;color:#fff;border:1px solid #fff;padding:8px;width:100%;border-radius:10px;cursor:pointer;margin-top:10px;font-size:12px}.timestamp{text-align:center;margin-top:20px;font-size:12px;opacity:.5})rawliteral";
-const char script_js[] PROGMEM = R"rawliteral(document.addEventListener('DOMContentLoaded',initApp);function initApp(){document.getElementById("mode-dropdown").addEventListener("change",toggleDropdown);toggleDropdown();setInterval(fetchData,2000);setInterval(updateClock,1000);fetchData()}function toggleDropdown(){let e="Automático"===document.getElementById("mode-dropdown").value;document.getElementById("temp-dropdown").disabled=e,document.getElementById("rpm_power-dropdown").disabled=e}function updateClock(){const e=new Date;document.querySelector('.timestamp').textContent=e.toLocaleDateString()+' - '+e.toLocaleTimeString()}function fetchData(){fetch('/status').then(e=>e.json()).then(e=>{document.getElementById("temp-atual").innerHTML=e.atual.toFixed(1)+"°C",document.getElementById("umidade-relativa").innerHTML=e.umidade.toFixed(1)+"%",document.getElementById("sensacao-termica").innerHTML=e.sensacao.toFixed(1)+"°C",document.getElementById("ponto-orvalho").innerHTML=e.orvalho.toFixed(1)+"°C",document.getElementById("max-temp").innerHTML=e.max.toFixed(1)+"°C",document.getElementById("min-temp").innerHTML=e.min.toFixed(1)+"°C",document.getElementById("avg-temp").innerHTML=e.avg.toFixed(1)+"°C",document.getElementById("rpm").innerHTML=e.rpm+" RPM"}).catch(e=>console.error(e))}function handleSave(){const e=document.getElementById("mode-dropdown").value,t=document.getElementById("temp-dropdown").value,n=document.getElementById("rpm_power-dropdown").value;fetch(`/save?mode=${e}&target=${t}&rpm=${n}`).then(e=>{e.ok&&alert('Salvo no ESP32!')})}function handleReset(){confirm('Resetar Stats?')&&fetch('/reset').then(()=>alert('Resetado!'))})rawliteral";
+            <div class="panel">
+                <div class="panel-title">Informações do Sistema</div>
+                <div class="control-row" style="justify-content: center; margin-bottom: 20px;">
+                    <button id="toggle-btn" class="toggle-btn" onclick="toggleCooler()">LIGAR SISTEMA</button>
+                </div>
+                <div class="control-row"><div class="control-label">RPM Atual:</div><div id="rpm" class="rpm-display">0 RPM</div></div>
+                <div class="control-row" id="msg-row"><div class="control-label">Mensagem:</div><div id="status-msg" class="metric-value">Aguardando...</div></div>
+                <div class="control-row"><div class="control-label">Status do Sistema:</div><div id="status-indicator" class="status-indicator"></div></div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div id="uptime-display" class="uptime">Tempo Ativo: Calculando...</div>
+            <div class="timestamp">--:--:--</div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+)rawliteral";
 
+// ================= CSS (ESTILOS) =================
+const char style_css[] PROGMEM = R"rawliteral(
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #ffffff; padding: 20px; min-height: 100vh; }
+.container { max-width: 1200px; margin: 0 auto; }
+.header { display: flex; align-items: center; margin-bottom: 30px; gap: 15px; }
+.logo { font-size: 48px; }
+.title { font-size: 48px; font-weight: bold; letter-spacing: 2px; }
+.location { text-align: right; font-size: 32px; font-weight: 600; margin-bottom: 20px; }
+.main-content { display: flex; gap: 30px; align-items: stretch; }
+.panel { background: rgba(48, 56, 89, 0.6); border-radius: 20px; padding: 30px; backdrop-filter: blur(10px); display: flex; flex-direction: column; gap: 20px; flex: 1; }
+.panel-title { font-size: 28px; font-weight: 600; text-align: center; margin-bottom: 10px; }
+.toggle-btn { width: 100%; padding: 15px; font-size: 18px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; transition: all .3s ease; text-transform: uppercase; }
+.btn-on { background-color: #ef4444; color: #fff; box-shadow: 0 0 15px rgba(239,68,68,.4); }
+.btn-off { background-color: #3b82f6; color: #fff; }
+.btn-on:hover { background-color: #dc2626; }
+.btn-off:hover { background-color: #2563eb; }
+#msg-row { flex-direction: column; align-items: flex-start; gap: 10px !important; margin: 10px 0 10px 0 !important; }
+#status-msg { white-space: normal; word-break: break-word; width: 100%; padding: 14px 20px; border-radius: 12px; background: #2d3561; font-size: 18px; }
+.status-indicator { width: 20px; height: 20px; border-radius: 50%; }
+.status-indicator.ok { background: #4ade80; box-shadow: 0 0 10px #4ade80; }
+.status-indicator.warn { background: #facc15; box-shadow: 0 0 10px #facc15; }
+.status-indicator.error { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+.metric-row, .control-row { display: flex; justify-content: space-between; align-items: center; }
+.metric-label, .control-label { font-size: 20px; font-weight: 500; }
+.metric-value { background: #2d3561; padding: 10px 25px; border-radius: 25px; font-size: 20px; font-weight: 600; min-width: 120px; text-align: center; }
+.rpm-display { background: #2d3561; padding: 10px 25px; border-radius: 25px; font-size: 20px; font-weight: 700; text-align: center; }
+.stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 15px; margin-top: 10px; padding-top: 20px; border-top: 2px solid rgba(255,255,255,.1); }
+.stat-box { text-align: center; }
+.stat-label { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.stat-value { font-size: 22px; font-weight: 700; }
+.footer { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,.1); }
+.uptime { font-size: 18px; color: #4ade80; font-weight: 600; }
+.timestamp { font-size: 18px; opacity: 0.8; font-weight: 600; }
+@media (max-width:900px){ body{padding:10px} .main-content{flex-direction:column;gap:20px} .panel{padding:20px;gap:15px} .title{font-size:36px} .location{font-size:22px;text-align:left} .metric-label,.control-label{font-size:16px} .metric-value,.rpm-display{font-size:16px;min-width:auto} .stats-row{grid-template-columns:1fr 1fr 1fr;gap:10px} }
+@media (max-width:480px){ .metric-row,.control-row{flex-direction:column;align-items:flex-start;gap:6px} .metric-value{width:100%} .footer{flex-direction:column;gap:10px;text-align:center} }
+)rawliteral";
 
-// ================= FUNÇÕES AUXILIARES =================
+// ================= JAVASCRIPT =================
+const char script_js[] PROGMEM = R"rawliteral(
+let dados = {};
+document.addEventListener("DOMContentLoaded", initApp);
+function initApp() {
+    atualizarDados();
+    setInterval(() => { fetchData(); atualizarData(); }, 1000);
+}
+function fetchData() {
+    fetch("/status").then(r => r.json()).then(d => {
+        dados = d; atualizarDados(); atualizarStatus(); atualizarBotao();
+    }).catch(e => console.error(e));
+}
+function toggleCooler() { fetch("/toggle").then(() => fetchData()); }
+function atualizarBotao() {
+    const btn = document.getElementById("toggle-btn");
+    if (dados.masterSwitch) {
+        btn.textContent = "SISTEMA ATIVADO (AUTO)"; btn.className = "toggle-btn btn-on";
+    } else {
+        btn.textContent = "SISTEMA DESLIGADO"; btn.className = "toggle-btn btn-off";
+    }
+}
+function atualizarDados() {
+    if (!dados.atual) return;
+    const metricas = {
+        "temp-atual": `${dados.atual.toFixed(1)}° C`, "temp-externa": `${dados.externa.toFixed(1)}° C`,
+        "sensacao-termica": `${dados.sensacao.toFixed(1)}° C`, "ponto-orvalho": `${dados.orvalho.toFixed(1)}° C`,
+        "umidade-relativa": `${dados.umidade.toFixed(1)} %`, "max-temp": `${dados.max.toFixed(1)}° C`,
+        "avg-temp": `${dados.avg.toFixed(1)}° C`, "min-temp": `${dados.min.toFixed(1)}° C`, "rpm": `${dados.rpm_value} RPM`,
+    };
+    for (const [id, valor] of Object.entries(metricas)) {
+        const el = document.getElementById(id); if (el) el.textContent = valor;
+    }
+    const upEl = document.getElementById("uptime-display");
+    if (upEl && dados.uptime) upEl.textContent = "Tempo Ativo: " + dados.uptime;
+}
+function atualizarStatus() {
+    const ind = document.getElementById("status-indicator");
+    const msg = document.getElementById("status-msg");
+    if (!ind || !msg) return;
+    if (!dados.masterSwitch) {
+        ind.className = "status-indicator warn"; msg.textContent = "Sistema Desligado Manualmente.";
+    } else if (dados.atual >= 35) {
+        ind.className = "status-indicator error"; msg.textContent = "Temperatura Alta! Cooler Refrigerando.";
+    } else {
+        ind.className = "status-indicator ok"; msg.textContent = "Temperatura Estável. Cooler em desligando em 30cº.";
+    }
+}
+function atualizarData() {
+    const now = new Date(); document.querySelector(".timestamp").textContent = now.toLocaleDateString() + " - " + now.toLocaleTimeString();
+}
+)rawliteral";
 
-// Controle do Transistor (Hardware)
-void aplicarVelocidadeNoMotor(int rpmVirtual) {
-    int dutyCycle = 0;
-    if (rpmVirtual >= 3000) dutyCycle = 255;      
-    else if (rpmVirtual >= 1500) dutyCycle = 180; 
-    else if (rpmVirtual >= 800) dutyCycle = 100;  
-    else dutyCycle = 0;                           
-    
-    // Envia sinal para o transistor
-    ledcWrite(CANAL_PWM, dutyCycle); 
+// ================= LÓGICA DE HARDWARE =================
+
+void atualizarHardware() {
+    // 1. Se estiver desligado manualmente
+    if (!masterSwitch) {
+        ledcWrite(PIN_TRANSISTOR, 0);
+        rpmDisplay = 0;
+        return;
+    }
+
+    // 2. Lógica com Histerese (Estável)
+    // SÓ LIGA se passar de 35
+    if (tempAtual >= 35.0) {
+        ledcWrite(PIN_TRANSISTOR, 255); // Liga 100%
+        rpmDisplay = 3000;
+    } 
+    // SÓ DESLIGA se cair abaixo de 30
+    else if (tempAtual <= 30.0) {
+        ledcWrite(PIN_TRANSISTOR, 0); 
+        rpmDisplay = 0;
+    }
+    // OBS: Entre 30.1 e 34.9 ele não faz nada (mantém o que estava)
 }
 
 float calculateDewPoint(float temp, float hum) {
@@ -73,7 +212,6 @@ float calculateDewPoint(float temp, float hum) {
   return (b * alpha) / (a - alpha);
 }
 
-// Leitura dos dados + Controle
 void readSensor() {
   float t = dht.readTemperature();
   float h = dht.readHumidity();
@@ -83,160 +221,129 @@ void readSensor() {
     if (t > tempMax) tempMax = t;
     if (t < tempMin) tempMin = t;
     tempSoma += t; leiturasCount++;
-    
-    // Lógica Automática
-    if (modoOperacao == "Automático") {
-      if (t > 28) rpmValue = 3000; 
-      else if (t > 25) rpmValue = 1500; 
-      else rpmValue = 0;
-      aplicarVelocidadeNoMotor(rpmValue); // Aplica no Transistor
-    }
+    atualizarHardware();
   }
 }
 
-// ================= LÓGICA MQTT =================
-
-void callback(char* topic, byte* payload, unsigned int length) {
-  // Aqui você pode receber comandos via MQTT no futuro
-  // Ex: Se receber "LIGAR" no topico frost/set, muda o modo.
-}
-
+// ================= MQTT =================
 void reconnectMQTT() {
-  // Tenta conectar se o Wi-Fi de casa estiver OK
   if (WiFi.status() == WL_CONNECTED && !client.connected()) {
-    Serial.print("Tentando conectar MQTT...");
-    if (client.connect("FROST_ESP32_CLIENT")) {
-      Serial.println("Conectado!");
+    String clientId = "FROST-ESP32-System"; 
+    if (client.connect(clientId.c_str())) {
+      client.publish(mqtt_topic_status, "ESP32 Online");
       client.subscribe(mqtt_topic_set);
-    } else {
-      Serial.print("Falha, rc=");
-      Serial.print(client.state());
     }
   }
 }
 
 void publishData() {
   if (client.connected()) {
-    // Cria um JSON simples para enviar
-    String msg = "{\"temp\":" + String(tempAtual) + 
-                 ", \"hum\":" + String(humAtual) + 
-                 ", \"rpm\":" + String(rpmValue) + "}";
+    String msg = "{\"temp\":" + String(tempAtual) + ", \"hum\":" + String(humAtual) + ", \"rpm\":" + String(rpmDisplay) + "}";
     client.publish(mqtt_topic_status, msg.c_str());
   }
 }
 
-// ================= ROTAS WEB (IGUAIS) =================
+void callback(char* topic, byte* payload, unsigned int length) {
+    // Callback vazia
+}
+
+// ================= ROTAS WEB =================
 void handleRoot() { server.send(200, "text/html", index_html); }
 void handleCss() { server.send(200, "text/css", style_css); }
 void handleJs() { server.send(200, "application/javascript", script_js); }
-void handleCaptivePortal() {
-  server.sendHeader("Location", String("http://") + WiFi.softAPIP().toString(), true);
-  server.send(302, "text/plain", "");   
-}
 
 void handleStatus() {
   float heatIndex = dht.computeHeatIndex(tempAtual, humAtual, false);
   float dewPoint = calculateDewPoint(tempAtual, humAtual);
   float avg = (leiturasCount > 0) ? (tempSoma / leiturasCount) : 0;
+
+  unsigned long now = millis();
+  unsigned long seconds = now / 1000;
+  unsigned long minutes = seconds / 60;
+  unsigned long hours = minutes / 60;
+  unsigned long days = hours / 24;
   
-  String json = "{\"atual\":" + String(tempAtual) + ",\"umidade\":" + String(humAtual) + 
-                ",\"sensacao\":" + String(heatIndex) + ",\"orvalho\":" + String(dewPoint) + 
-                ",\"max\":" + String(tempMax) + ",\"min\":" + String(tempMin) + 
-                ",\"avg\":" + String(avg) + ",\"rpm\":" + String(rpmValue) + "}";
+  String uptimeStr = String(days) + "d " + String(hours % 24) + "h " + String(minutes % 60) + "m " + String(seconds % 60) + "s";
+
+  String json = "{";
+  json += "\"atual\":" + String(tempAtual) + ",";
+  json += "\"externa\":" + String(tempAtual) + ","; 
+  json += "\"umidade\":" + String(humAtual) + ",";
+  json += "\"sensacao\":" + String(heatIndex) + ",";
+  json += "\"orvalho\":" + String(dewPoint) + ",";
+  json += "\"max\":" + String(tempMax) + ",";
+  json += "\"min\":" + String(tempMin) + ",";
+  json += "\"avg\":" + String(avg) + ",";
+  json += "\"rpm_value\":" + String(rpmDisplay) + ",";
+  json += "\"masterSwitch\":" + String(masterSwitch ? "true" : "false") + ",";
+  json += "\"uptime\":\"" + uptimeStr + "\""; 
+  json += "}";
+  
   server.send(200, "application/json", json);
 }
 
-void handleSave() {
-  if (server.hasArg("mode")) modoOperacao = server.arg("mode");
-  if (server.hasArg("target")) targetTemp = server.arg("target");
-  if (server.hasArg("rpm")) rpmMode = server.arg("rpm");
-  
-  if (modoOperacao == "Manual") {
-     if (rpmMode == "Máximo") rpmValue = 3000;
-     else if (rpmMode == "Médio") rpmValue = 1500;
-     else if (rpmMode == "Mínimo") rpmValue = 800;
-     else rpmValue = 0;
-     
-     aplicarVelocidadeNoMotor(rpmValue); // Aplica no Transistor
-  }
-  server.send(200, "text/plain", "OK");
+void handleToggle() {
+    masterSwitch = !masterSwitch; 
+    atualizarHardware(); 
+    server.send(200, "text/plain", "OK");
 }
 
-void handleResetStats() {
-  tempMax = -100; tempMin = 100; tempSoma = 0; leiturasCount = 0;
-  server.send(200, "text/plain", "OK");
+void handleCaptivePortal() {
+  server.sendHeader("Location", String("http://") + WiFi.softAPIP().toString(), true);
+  server.send(302, "text/plain", "");   
 }
 
 // ================= SETUP E LOOP =================
-
 void setup() {
   Serial.begin(115200);
   dht.begin();
+  
+  // PWM padrão (estável)
+  ledcAttach(PIN_TRANSISTOR, 25000, 8); 
+  ledcWrite(PIN_TRANSISTOR, 0); 
 
-  // Configuração do PWM (Transistor)
-  // ledcSetup(CANAL_PWM, 25000, 8);
-  // ledcAttachPin(PIN_TRANSISTOR, CANAL_PWM);
-
-  // 1. Inicia Wi-Fi em Modo DUPLO (AP + Station)
   WiFi.mode(WIFI_AP_STA);
-  
-  // Configura o AP (Sua rede local FROST)
   WiFi.softAP(ap_ssid, ap_password);
-  
-  // Conecta ao Roteador (Para internet/MQTT)
   WiFi.begin(home_ssid, home_password);
   
   delay(100); 
 
-  IPAddress IP_AP = WiFi.softAPIP();
-  Serial.print("AP Iniciado: "); Serial.println(IP_AP);
-  
-  // Configura DNS (Captive Portal)
-  dnsServer.start(DNS_PORT, "*", IP_AP);
+  dnsServer.start(DNS_PORT, "*", WiFi.softAPIP());
 
-  // Configura Servidor MQTT
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
 
-  // Rotas Web
   server.on("/", handleRoot);
   server.on("/style.css", handleCss);
   server.on("/script.js", handleJs);
   server.on("/status", handleStatus);
-  server.on("/save", handleSave);
-  server.on("/reset", handleResetStats);
+  server.on("/toggle", handleToggle); 
   server.onNotFound(handleCaptivePortal);
 
   server.begin();
 }
 
 unsigned long lastRead = 0;
-unsigned long lastMqtt = 0;
 
 void loop() {
-  // Lógica Web e DNS
   dnsServer.processNextRequest();
   server.handleClient();
 
-  // Lógica MQTT (Tenta reconectar se caiu)
-  if (!client.connected()) {
-     // Só tenta reconectar ao MQTT a cada 5 segundos para não travar o loop
-     static unsigned long lastReconnectAttempt = 0;
-     if (millis() - lastReconnectAttempt > 5000) {
-       lastReconnectAttempt = millis();
-       if (WiFi.status() == WL_CONNECTED) {
-          reconnectMQTT();
-       }
+  if (WiFi.status() == WL_CONNECTED) {
+     if (!client.connected()) {
+         static unsigned long lastMqttAttempt = 0;
+         if (millis() - lastMqttAttempt > 5000) {
+             lastMqttAttempt = millis();
+             reconnectMQTT();
+         }
+     } else {
+         client.loop(); 
      }
   }
-  client.loop();
 
-  // Leitura do Sensor (A cada 2s)
   if (millis() - lastRead > 2000) {
     lastRead = millis();
     readSensor();
-    
-    // Envia MQTT (A cada leitura do sensor)
     publishData();
   }
 }
